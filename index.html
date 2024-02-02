@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App (Sunday, 20 June 2021)</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      h2 {
+        font-size: 30px;
+        font-family: cursive;
+        letter-spacing: 1px;
+      }
+      .d-none {
+        display: none;
+      }
+      .color-red {
+        color: red;
+      }
+      .line-through {
+        text-decoration: line-through;
+      }
+      ul {
+        list-style: none;
+      }
+      li {
+        border: 1px solid #ddd;
+        margin: 9px 0;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+      }
+      li:hover {
+        border-color: lightgreen;
+        color: rgb(21, 170, 21);
+      }
+      li span:first-child {
+        font-family: arial;
+        font-size: 16px;
+        line-height: 18px;
+        margin-right: auto;
+      }
+
+      li span:hover {
+      }
+      li i {
+        color: rgb(224, 82, 82);
+        cursor: pointer;
+        font-size: 21px;
+        transform: translateY(1px);
+        margin-left: 6px;
+      }
+      li i:hover {
+        color: red;
+      }
+      h2,
+      h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        font-family: arial;
+      }
+      h4 {
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: #f878bc;
+      }
+      .container {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        /* border: 1px solid; */
+        padding: 37px 17px 35px;
+        background-color: #f1f1f1;
+        margin-top: 45px;
+        margin-bottom: 30px; 
+       
+      }
+      @media(min-width: 992px) {
+        .container {
+          border-radius: 5px;
+        }
+      }
+      input {
+        background: #fff;
+        border: 1.1px solid #ddd;
+        padding: 11px 15px;
+        width: 100%;
+        border-radius: 4px;
+        outline: none;
+      }
+      input[type="text"]:focus {
+        border-color: lightgreen;
+      }
+      input[type="submit"],
+      input[type="button"] {
+        width: auto;
+        margin-top: 10px;
+        background-color: rgb(50, 216, 50);
+        color: #fff;
+        font-weight: 700;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 10px 25px;
+      }
+      input[type="submit"]:hover {
+        background-color: #19c519;
+      }
+      input[type="button"].bg-black {
+        background: rgb(7, 7, 7);
+      }
+      input[type="button"].bg-black:hover {
+        background: rgb(85, 85, 85);
+      }
+      input[type="button"]:hover {
+        background-color: rgb(36, 230, 69);
+        cursor: pointer;
+      }
+      .filter-todo {
+        margin-top: 40px;
+        margin-bottom: 15px;
+      }
+      .todo-list {
+        margin-top: 10px;
+      }
+      .todo-list h4 {
+        margin-top: 20px;
+      }
+      span {
+        outline: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Task Manager</h2>
+      <form action="#">
+        <div class="todo-add">
+          <input type="text" placeholder="Add Todo" />
+          <input type="submit" value="Add Task" />
+        </div>
+      </form>
+      <div class="filter-todo">
+        <input type="text" placeholder="Filter Task" />
+      </div>
+      <div class="todo-list">
+        <h4>Todo List</h4>
+        <ul></ul>
+        <input class="bg-black" type="button" value="Clear All" />
+      </div>
+    </div>
+    <script>
+      !(function () {
+        // Variables
+        let taskListWrap = document.querySelector(".todo-list");
+        let taskForm = document.querySelector("form");
+        let taskInput = document.querySelector(".todo-add input");
+        let filterInput = document.querySelector(".filter-todo input");
+
+        let taskList = document.querySelector(".todo-list ul");
+        let clearAllBTN = document.querySelector(".todo-list input");
+        let tasks = localStorage.getItem("tasks")
+          ? JSON.parse(localStorage.getItem("tasks"))
+          : [];
+
+        // Function: All Event Listener
+        allEventListener();
+        function allEventListener() {
+          document.addEventListener("DOMContentLoaded", showTasks);
+          taskForm.addEventListener("submit", addTask);
+          taskList.addEventListener("click", removeAndToggleTask);
+          clearAllBTN.addEventListener("click", clearAllTasks);
+          filterInput.addEventListener("keyup", filterTasks);
+        }
+
+        // Function: Show Tasks
+        function showTasks() {
+          showHideTasks();
+          taskList.innerHTML = "";
+          for (var i = 0; i < tasks.length; i++) {
+            taskList.innerHTML +=
+              '<li><span class="' +
+              (tasks[i].isDone ? "line-through" : "") +
+              '">' +
+              tasks[i].text +
+              '</span><i class="fa fa-times"></i></li>';
+          }
+        }
+        // Function: Show and Hide Tasks
+        function showHideTasks() {
+          if (tasks.length) {
+            taskListWrap.classList.remove("d-none");
+            filterInput.parentNode.classList.remove("d-none");
+          } else {
+            taskListWrap.classList.add("d-none");
+            filterInput.parentNode.classList.add("d-none");
+          }
+        }
+        // Function: Add Task
+        function addTask(e) {
+          const inputVal = taskInput.value.trim();
+          if (!inputVal.length) {
+            alert("Please write something");
+          } else {
+            const task = {
+              text: taskInput.value,
+              isDone: false,
+            };
+            tasks.push(task);
+            // UI
+            showTasks();
+            taskInput.value = "";
+
+            // Local Storage
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+          }
+          e.preventDefault();
+        }
+
+        // Function: Filter Tasks
+        function filterTasks(e) {
+          const filterInputVal = this.value.trim().toLowerCase();
+          const listItems = taskList.children;
+          for (let i = 0; i < listItems.length; i++) {
+            const taskValue =
+              listItems[i].firstElementChild.textContent.toLowerCase();
+            if (taskValue.indexOf(filterInputVal) === -1) {
+              listItems[i].classList.add("d-none");
+            } else {
+              listItems[i].classList.remove("d-none");
+            }
+          }
+        }
+
+        // Function: Remove and Toggle Task
+        function removeAndToggleTask(e) {
+          const target = e.target;
+          const targetParent = target.parentElement;
+          let index;
+          for (var i = 0; i < taskList.children.length; i++) {
+            if (taskList.children[i] === targetParent) {
+              index = i;
+            }
+          }
+
+          // Remove Task
+          if (target.className === "fa fa-times" && confirm("Are you sure? ")) {
+            // UI
+            targetParent.remove();
+            // Local Storage
+            removeTaskFromLocalStorage(index);
+            showHideTasks();
+          }
+
+          // Toggle Task
+          if (
+            target.nodeName === "SPAN" &&
+            targetParent.firstElementChild === target
+          ) {
+            // UI
+            target.classList.toggle("line-through");
+            toggleTaskFromLocalStorage(index);
+          }
+
+          // Edit Task
+          if (
+            targetParent.children[1] === target &&
+            target.nodeName === "SPAN"
+          ) {
+            editTaskFromLocalStorage(index);
+          }
+        }
+
+        // Function: Clear All Tasks
+        function clearAllTasks() {
+          if (confirm("Are you sure?")) {
+            tasks = [];
+            showTasks();
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+          }
+        }
+
+        /* Local Storage */
+
+        // Function: Remove Task from Local Storage
+        function removeTaskFromLocalStorage(i) {
+          tasks.splice(i, 1);
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        // Function: Toggle Task from Local Storage
+        function toggleTaskFromLocalStorage(index) {
+          const newTasks = [];
+          for (var i = 0; i < tasks.length; i++) {
+            if (i === index) {
+              newTasks[newTasks.length] = {
+                text: tasks[i].text,
+                isDone: !tasks[i].isDone,
+              };
+            } else {
+              newTasks[newTasks.length] = tasks[i];
+            }
+          }
+          tasks = newTasks;
+          localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+      })();
+    </script>
+  </body>
+</html>
